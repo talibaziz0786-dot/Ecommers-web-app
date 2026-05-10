@@ -13,17 +13,27 @@ const upload = multer({
 router.post(
   "/",
   upload.array("images", 5),
+
   async (req, res) => {
 
     try {
+
+      if (!req.files || req.files.length === 0) {
+        return res.status(400).json({
+          message: "No files uploaded",
+        });
+      }
 
       const uploadedImages = [];
 
       for (const file of req.files) {
 
+        const base64 =
+          `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
+
         const result =
           await cloudinary.uploader.upload(
-            `data:${file.mimetype};base64,${file.buffer.toString("base64")}`,
+            base64,
             {
               folder: "ecommerce",
             }
@@ -40,10 +50,14 @@ router.post(
 
     } catch (error) {
 
+      console.log("UPLOAD ERROR:");
       console.log(error);
+      console.log(process.env.CLOUD_NAME);
+console.log(process.env.CLOUDINARY_CLOUD_NAME);
 
       res.status(500).json({
         message: "Upload Failed",
+        error: error.message,
       });
     }
   }

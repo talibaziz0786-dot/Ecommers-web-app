@@ -107,9 +107,10 @@ dark:bg-zinc-900
         <div className="relative overflow-hidden">
 
           <img
-            src={
-              product.images?.[0]
-            }
+           src={
+  product.images?.[0] ||
+  "https://via.placeholder.com/500x500?text=No+Image"
+}
             alt={product.name}
             className="
               h-72
@@ -176,7 +177,45 @@ dark:bg-zinc-900
               tracking-wide
             "
           >
-            {product.category}
+            <div className="flex items-center gap-2">
+
+  <span>
+    {product.category}
+  </span>
+
+  {product.countInStock > 0 ? (
+
+    <span
+      className="
+        bg-green-500
+        text-white
+        px-2
+        py-1
+        rounded-full
+        text-[10px]
+      "
+    >
+      In Stock
+    </span>
+
+  ) : (
+
+    <span
+      className="
+        bg-red-500
+        text-white
+        px-2
+        py-1
+        rounded-full
+        text-[10px]
+      "
+    >
+      Out
+    </span>
+
+  )}
+
+</div>
           </div>
         </div>
 
@@ -213,44 +252,56 @@ transition-colors
 
           {/* RATING */}
           <div
-            className="
-              flex
-              items-center
-              gap-1
-              mt-4
-            "
-          >
-            <Star
-              size={16}
-              fill="currentColor"
-            />
-            <Star
-              size={16}
-              fill="currentColor"
-            />
-            <Star
-              size={16}
-              fill="currentColor"
-            />
-            <Star
-              size={16}
-              fill="currentColor"
-            />
-            <Star
-              size={16}
-              className="text-gray-300"
-            />
+  className="
+    flex
+    items-center
+    gap-1
+    mt-4
+  "
+>
 
-            <span
-              className="
-                text-sm
-                text-gray-500
-                ml-2
-              "
-            >
-              4.0
-            </span>
-          </div>
+  {Array.from({
+    length: 5,
+  }).map((_, i) => (
+
+    <Star
+      key={i}
+      size={16}
+      fill={
+        i <
+        Math.round(
+          product.rating || 0
+        )
+          ? "currentColor"
+          : "transparent"
+      }
+      className={
+        i <
+        Math.round(
+          product.rating || 0
+        )
+          ? "text-yellow-500"
+          : "text-gray-300"
+      }
+    />
+
+  ))}
+
+  <span
+    className="
+      text-sm
+      text-gray-500
+      ml-2
+    "
+  >
+    {product.rating || 0}
+    {" "}
+    (
+    {product.numReviews || 0}
+    )
+  </span>
+
+</div>
 
           {/* PRICE */}
           <div

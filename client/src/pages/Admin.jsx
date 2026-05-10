@@ -1,389 +1,725 @@
-// src/pages/Admin.jsx
+import {
+  useState,
+  useEffect,
+} from "react";
 
-import { useState } from "react";
 import axios from "axios";
-import imageCompression from "browser-image-compression";
+
+import {
+  Upload,
+  PackagePlus,
+  Trash2,
+  Pencil,
+  Boxes,
+  AlertTriangle,
+} from "lucide-react";
 
 export default function Admin() {
-  const [form, setForm] = useState({
-    name: "",
-    price: "",
-    images: [],
-    description: "",
-    category: "Clothes",
-    countInStock: "",
-  });
 
-  const [uploading, setUploading] =
+  const [formData, setFormData] =
+    useState({
+      name: "",
+      price: "",
+      category: "",
+      description: "",
+      countInStock: "",
+      images: [],
+    });
+
+  const [preview, setPreview] =
+    useState("");
+
+  const [loading, setLoading] =
     useState(false);
 
-  // 🔥 IMAGE UPLOAD
- const uploadFileHandler = async (e) => {
+  const [products, setProducts] =
+    useState([]);
 
-  const files = Array.from(e.target.files);
+  // FETCH PRODUCTS
+  const fetchProducts =
+    async () => {
 
-  if (!files.length) return;
+      try {
 
-  try {
+        const { data } =
+          await axios.get(
+            `${import.meta.env.VITE_API_URL}/products`
+          );
 
-    setUploading(true);
+        setProducts(data);
 
-    const uploadedImages = [];
+      } catch (error) {
 
-    for (const file of files) {
+        console.log(error);
+      }
+    };
 
-      // ✅ IMAGE COMPRESS
-      const compressedFile =
-        await imageCompression(file, {
-          maxSizeMB: 1,
-          maxWidthOrHeight: 1920,
-          useWebWorker: true,
-        });
+  useEffect(() => {
 
-      const formData = new FormData();
+    fetchProducts();
 
-   formData.append(
-  "images",
-  compressedFile
-);
+  }, []);
 
-      const { data } = await axios.post(
-        "http://localhost:5000/api/upload",
-        formData,
-        {
-          headers: {
-            "Content-Type":
-              "multipart/form-data",
-          },
-        }
-      );
+  // INPUT HANDLER
+  const changeHandler = (e) => {
 
-    uploadedImages.push(
-  ...data.images
-);
-    }
-
-    setForm((prev) => ({
-      ...prev,
-      images: [
-        ...(prev.images || []),
-        ...uploadedImages,
-      ],
-    }));
-
-    setUploading(false);
-
-  } catch (error) {
-
-    console.error(error);
-
-    setUploading(false);
-
-    alert(
-      "Image Upload Failed ❌"
-    );
-  }
-};
-
-  // 🔥 INPUT CHANGE
-  const handleChange = (e) => {
-    setForm({
-      ...form,
+    setFormData({
+      ...formData,
       [e.target.name]:
         e.target.value,
     });
   };
 
-  // 🔥 ADD PRODUCT
- const addProduct = async () => {
-  try {
+  // IMAGE UPLOAD
+  const imageHandler =
+    async (e) => {
 
-    const token =
-      localStorage.getItem("token");
+      const file =
+        e.target.files[0];
 
-    // ✅ FIX DATA TYPES
-    const productData = {
-      ...form,
-      price: Number(form.price),
-      countInStock: Number(form.countInStock),
+      if (!file) return;
+
+      const data =
+        new FormData();
+
+      data.append(
+        "images",
+        file
+      );
+
+      setPreview(
+        URL.createObjectURL(file)
+      );
+
+      try {
+
+        setLoading(true);
+
+        const res =
+          await axios.post(
+
+            `${import.meta.env.VITE_API_URL}/upload`,
+
+            data,
+
+            {
+              headers: {
+                "Content-Type":
+                  "multipart/form-data",
+              },
+            }
+          );
+
+        setFormData({
+          ...formData,
+          images:
+            res.data.images,
+        });
+
+        alert(
+          "Image Uploaded ✅"
+        );
+
+      } catch (error) {
+
+        console.log(error);
+
+        alert(
+          "Upload Failed ❌"
+        );
+
+      } finally {
+
+        setLoading(false);
+      }
     };
 
-    console.log(productData);
+  // ADD PRODUCT
+  const submitHandler =
+    async (e) => {
 
-    await axios.post(
-      "http://localhost:5000/api/products",
-      productData,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      e.preventDefault();
+
+      try {
+
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
+        await axios.post(
+
+          `${import.meta.env.VITE_API_URL}/products`,
+
+          formData,
+
+          {
+            headers: {
+              Authorization:
+                `Bearer ${token}`,
+            },
+          }
+        );
+
+        alert(
+          "Product Added ✅"
+        );
+
+        setFormData({
+          name: "",
+          price: "",
+          category: "",
+          description: "",
+          countInStock: "",
+          images: [],
+        });
+
+        setPreview("");
+
+        fetchProducts();
+
+      } catch (error) {
+
+        console.log(error);
+
+        alert(
+          "Product Upload Failed ❌"
+        );
       }
-    );
+    };
 
-    alert("Product Added ✅");
+  // DELETE PRODUCT
+  const deleteHandler =
+    async (id) => {
 
-    // RESET
-    setForm({
-      name: "",
-      price: "",
-      images: [],
-      description: "",
-      category: "Clothes",
-      countInStock: "",
-    });
+      const confirmDelete =
+        window.confirm(
+          "Delete Product?"
+        );
 
-  } catch (error) {
+      if (!confirmDelete)
+        return;
 
-    console.error(error);
+      try {
 
-    alert("Add Product Failed ❌");
-  }
-};
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
+        await axios.delete(
+
+          `${import.meta.env.VITE_API_URL}/products/${id}`,
+
+          {
+            headers: {
+              Authorization:
+                `Bearer ${token}`,
+            },
+          }
+        );
+
+        fetchProducts();
+
+        alert(
+          "Product Deleted ✅"
+        );
+
+      } catch (error) {
+
+        console.log(error);
+
+        alert(
+          "Delete Failed ❌"
+        );
+      }
+    };
 
   return (
-    <div className="pt-32 p-6 max-w-3xl mx-auto">
 
+    <div
+      className="
+        max-w-7xl
+        mx-auto
+        py-10
+        px-5
+      "
+    >
+
+      {/* TOP */}
       <div
         className="
-        bg-white
-        dark:bg-zinc-900
-        shadow-2xl
-        rounded-[40px]
-        p-8
-        border
-        border-zinc-200
-        dark:border-zinc-800
-      "
+          flex
+          items-center
+          gap-4
+          mb-10
+        "
       >
+
+        <PackagePlus size={40} />
+
         <h1
           className="
-          text-4xl
-          font-black
-          mb-8
-        "
+            text-5xl
+            font-black
+          "
         >
-          Admin Panel
+          Product Manager
         </h1>
 
-        {/* NAME */}
-        <input
-          name="name"
-          value={form.name}
-          placeholder="Product Name"
-          onChange={handleChange}
-          className="
-            border
-            p-4
-            w-full
-            mb-4
-            rounded-2xl
-            outline-none
-          "
-        />
+      </div>
 
-        {/* PRICE */}
-        <input
-          name="price"
-          value={form.price}
-          placeholder="Price"
-          onChange={handleChange}
-          className="
-            border
-            p-4
-            w-full
-            mb-4
-            rounded-2xl
-            outline-none
-          "
-        />
-
-        {/* DESCRIPTION */}
-        <textarea
-          name="description"
-          value={form.description}
-          placeholder="Description"
-          onChange={handleChange}
-          className="
-            border
-            p-4
-            w-full
-            mb-4
-            rounded-2xl
-            outline-none
-            h-32
-          "
-        />
-
-        {/* IMAGE PREVIEW */}
-        {form.images.length > 0 && (
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            {form.images.map(
-              (img, index) => (
-                <img
-                  key={index}
-                  src={img}
-                  alt="preview"
-                  className="
-                    w-full
-                    h-44
-                    object-cover
-                    rounded-3xl
-                    border
-                  "
-                />
-              )
-            )}
-          </div>
-        )}
-
-        {/* IMAGE UPLOAD */}
-        <label
-          className="
-          flex
-          flex-col
-          items-center
-          justify-center
-          w-full
-          h-56
-          border-2
-          border-dashed
-          rounded-[35px]
-          cursor-pointer
-          bg-zinc-50
-          dark:bg-zinc-950
-          hover:border-black
-          transition
-          overflow-hidden
-          mb-6
+      {/* ANALYTICS */}
+      <div
+        className="
+          grid
+          md:grid-cols-3
+          gap-6
+          mb-10
         "
-        >
-          <div className="text-center">
-            <h2
-              className="
-              text-2xl
-              font-bold
-            "
-            >
-              Upload Product Images
-            </h2>
+      >
 
-            <p
-              className="
-              text-sm
-              text-gray-500
-              mt-2
-            "
-            >
-              Drag & Drop or Click
-            </p>
-          </div>
-
-         <input
-  type="file"
-  multiple
-  accept="image/*"
-  onChange={uploadFileHandler}
-  className="hidden"
-/>
-        </label>
-
-        {/* LOADING */}
-        {uploading && (
-          <div className="mb-6">
-
-            <div
-              className="
-              w-full
-              h-3
-              bg-gray-200
-              rounded-full
-              overflow-hidden
-            "
-            >
-              <div
-                className="
-                h-full
-                bg-black
-                animate-pulse
-                w-full
-              "
-              />
-            </div>
-
-            <p className="mt-2 text-sm">
-              Uploading Images...
-            </p>
-
-          </div>
-        )}
-
-        {/* CATEGORY */}
-        <select
-          name="category"
-          value={form.category}
-          onChange={handleChange}
+        <div
           className="
-            border
-            p-4
-            w-full
-            mb-4
-            rounded-2xl
-            outline-none
+            bg-white
+            dark:bg-zinc-900
+            p-6
+            rounded-3xl
+            shadow-xl
           "
         >
-          <option>Clothes</option>
-          <option>Shoes</option>
-          <option>Jewellery</option>
-          <option>Electronics</option>
-          <option>Mobiles</option>
-          <option>Laptops</option>
-          <option>Watches</option>
-          <option>Beauty</option>
-          <option>Perfumes</option>
-          <option>Bags</option>
-          <option>Home</option>
-          <option>Kitchen</option>
-          <option>Sports</option>
-          <option>Books</option>
-          <option>Toys</option>
-          <option>Grocery</option>
-        </select>
 
-        {/* STOCK */}
-        <input
-          name="countInStock"
-          value={form.countInStock}
-          placeholder="Stock"
-          onChange={handleChange}
-          className="
-            border
-            p-4
-            w-full
-            mb-6
-            rounded-2xl
-            outline-none
-          "
-        />
+          <Boxes size={35} />
 
-        {/* BUTTON */}
-        <button
-          onClick={addProduct}
+          <h2
+            className="
+              text-4xl
+              font-black
+              mt-4
+            "
+          >
+            {products.length}
+          </h2>
+
+          <p className="text-gray-500">
+            Total Products
+          </p>
+
+        </div>
+
+        <div
           className="
-            w-full
-            bg-black
-            text-white
-            py-4
-            rounded-2xl
-            text-lg
-            font-bold
-            hover:scale-[1.02]
-            transition
+            bg-white
+            dark:bg-zinc-900
+            p-6
+            rounded-3xl
+            shadow-xl
           "
         >
-          Add Product
-        </button>
+
+          <AlertTriangle
+            size={35}
+          />
+
+          <h2
+            className="
+              text-4xl
+              font-black
+              mt-4
+            "
+          >
+            {
+              products.filter(
+                (p) =>
+                  p.countInStock <
+                  5
+              ).length
+            }
+          </h2>
+
+          <p className="text-gray-500">
+            Low Stock
+          </p>
+
+        </div>
+
+        <div
+          className="
+            bg-white
+            dark:bg-zinc-900
+            p-6
+            rounded-3xl
+            shadow-xl
+          "
+        >
+
+          <PackagePlus
+            size={35}
+          />
+
+          <h2
+            className="
+              text-4xl
+              font-black
+              mt-4
+            "
+          >
+            Admin
+          </h2>
+
+          <p className="text-gray-500">
+            Product Manager
+          </p>
+
+        </div>
 
       </div>
+
+      {/* FORM */}
+      <form
+        onSubmit={submitHandler}
+        className="
+          grid
+          md:grid-cols-2
+          gap-8
+          bg-white
+          dark:bg-zinc-900
+          p-8
+          rounded-3xl
+          shadow-2xl
+        "
+      >
+
+        {/* LEFT */}
+        <div className="space-y-5">
+
+          <input
+            type="text"
+            name="name"
+            placeholder="Product Name"
+            value={formData.name}
+            onChange={changeHandler}
+            className="
+              w-full
+              p-4
+              rounded-2xl
+              border
+            "
+          />
+
+          <input
+            type="number"
+            name="price"
+            placeholder="Price"
+            value={formData.price}
+            onChange={changeHandler}
+            className="
+              w-full
+              p-4
+              rounded-2xl
+              border
+            "
+          />
+
+          <input
+            type="text"
+            name="category"
+            placeholder="Category"
+            value={formData.category}
+            onChange={changeHandler}
+            className="
+              w-full
+              p-4
+              rounded-2xl
+              border
+            "
+          />
+
+          <input
+            type="number"
+            name="countInStock"
+            placeholder="Stock"
+            value={
+              formData.countInStock
+            }
+            onChange={changeHandler}
+            className="
+              w-full
+              p-4
+              rounded-2xl
+              border
+            "
+          />
+
+          <textarea
+            rows="6"
+            name="description"
+            placeholder="Description"
+            value={
+              formData.description
+            }
+            onChange={changeHandler}
+            className="
+              w-full
+              p-4
+              rounded-2xl
+              border
+            "
+          />
+
+        </div>
+
+        {/* RIGHT */}
+        <div>
+
+          <label
+            className="
+              border-2
+              border-dashed
+              rounded-3xl
+              h-80
+              flex
+              flex-col
+              items-center
+              justify-center
+              cursor-pointer
+              overflow-hidden
+            "
+          >
+
+            {preview ? (
+
+              <img
+                src={preview}
+                alt=""
+                className="
+                  w-full
+                  h-full
+                  object-cover
+                "
+              />
+
+            ) : (
+
+              <>
+
+                <Upload
+                  size={50}
+                />
+
+                <p className="mt-4">
+                  Drag & Drop Image
+                </p>
+
+              </>
+
+            )}
+
+            <input
+              type="file"
+              hidden
+              onChange={
+                imageHandler
+              }
+            />
+
+          </label>
+
+          {loading && (
+
+            <p className="mt-3">
+              Uploading...
+            </p>
+
+          )}
+
+          <button
+            className="
+              w-full
+              mt-6
+              bg-black
+              text-white
+              py-4
+              rounded-2xl
+              font-bold
+              text-lg
+            "
+          >
+            Add Product
+          </button>
+
+        </div>
+
+      </form>
+
+      {/* PRODUCT TABLE */}
+      <div
+        className="
+          mt-14
+          bg-white
+          dark:bg-zinc-900
+          rounded-3xl
+          p-6
+          shadow-2xl
+          overflow-x-auto
+        "
+      >
+
+        <h2
+          className="
+            text-3xl
+            font-black
+            mb-6
+          "
+        >
+          All Products
+        </h2>
+
+        <table className="w-full">
+
+          <thead>
+
+            <tr
+              className="
+                border-b
+                border-zinc-200
+                dark:border-zinc-800
+              "
+            >
+
+              <th className="text-left py-4">
+                Image
+              </th>
+
+              <th className="text-left py-4">
+                Name
+              </th>
+
+              <th className="text-left py-4">
+                Price
+              </th>
+
+              <th className="text-left py-4">
+                Stock
+              </th>
+
+              <th className="text-left py-4">
+                Actions
+              </th>
+
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            {products.map((p) => (
+
+              <tr
+                key={p._id}
+                className="
+                  border-b
+                  border-zinc-100
+                  dark:border-zinc-800
+                "
+              >
+
+                <td className="py-4">
+
+                  <img
+                    src={
+                      p.images?.[0] ||
+                      "https://via.placeholder.com/100"
+                    }
+                    alt=""
+                    className="
+                      h-16
+                      w-16
+                      object-cover
+                      rounded-xl
+                    "
+                  />
+
+                </td>
+
+                <td>
+                  {p.name}
+                </td>
+
+                <td>
+                  ₹{p.price}
+                </td>
+
+                <td>
+
+                  <span
+                    className={`
+                      px-3
+                      py-1
+                      rounded-full
+                      text-sm
+                      ${
+                        p.countInStock <
+                        5
+                          ? "bg-red-500 text-white"
+                          : "bg-green-500 text-white"
+                      }
+                    `}
+                  >
+                    {p.countInStock}
+                  </span>
+
+                </td>
+
+                <td>
+
+                  <div className="flex gap-3">
+
+                    <button
+                      className="
+                        p-3
+                        rounded-xl
+                        bg-zinc-100
+                        dark:bg-zinc-800
+                      "
+                    >
+                      <Pencil
+                        size={18}
+                      />
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        deleteHandler(
+                          p._id
+                        )
+                      }
+                      className="
+                        p-3
+                        rounded-xl
+                        bg-red-500
+                        text-white
+                      "
+                    >
+                      <Trash2
+                        size={18}
+                      />
+                    </button>
+
+                  </div>
+
+                </td>
+
+              </tr>
+
+            ))}
+
+          </tbody>
+
+        </table>
+
+      </div>
+
     </div>
   );
 }

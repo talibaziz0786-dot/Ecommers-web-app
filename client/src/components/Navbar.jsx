@@ -31,6 +31,8 @@ export default function Navbar({
   const token =
     localStorage.getItem("token");
 
+    const isLoggedIn = !!token;
+
   const user = token
     ? JSON.parse(
         atob(
@@ -240,6 +242,45 @@ export default function Navbar({
               <Moon size={22} />
             )}
           </button>
+
+          {/* LOGIN REGISTER */}
+
+{!isLoggedIn && (
+
+  <div className="flex items-center gap-2">
+
+    <Link
+      to="/login"
+      className="
+        px-5
+        py-2
+        rounded-full
+        bg-black
+        text-white
+        dark:bg-white
+        dark:text-black
+        font-semibold
+      "
+    >
+      Login
+    </Link>
+
+    <Link
+      to="/register"
+      className="
+        px-5
+        py-2
+        rounded-full
+        border
+        border-zinc-300
+        dark:border-zinc-700
+      "
+    >
+      Register
+    </Link>
+
+  </div>
+)}
 
           {/* LOGIN BUTTON */}
           {!token && (

@@ -1,123 +1,133 @@
 import {
-  ShoppingBag,
-  IndianRupee,
-  Users,
   Package,
+  Users,
+  ShoppingCart,
 } from "lucide-react";
 
 export default function Dashboard() {
 
-  const stats = [
-    {
-      title: "Total Sales",
-      value: "₹45,000",
-      icon: IndianRupee,
-    },
-
-    {
-      title: "Orders",
-      value: "120",
-      icon: ShoppingBag,
-    },
-
-    {
-      title: "Products",
-      value: "35",
-      icon: Package,
-    },
-
-    {
-      title: "Users",
-      value: "15",
-      icon: Users,
-    },
-  ];
-
   return (
     <div
       className="
-        pt-32
-        min-h-screen
-        bg-white
-        dark:bg-zinc-950
-        text-black
-        dark:text-white
-        px-6
+        max-w-7xl
+        mx-auto
+        py-10
       "
     >
-      <div className="max-w-7xl mx-auto">
 
-        <h1
-          className="
-            text-5xl
-            font-black
-            mb-10
-          "
-        >
-          Admin Dashboard
-        </h1>
+      <h1
+        className="
+          text-4xl
+          font-black
+          mb-10
+        "
+      >
+        Admin Dashboard
+      </h1>
+
+      <div
+        className="
+          grid
+          md:grid-cols-3
+          gap-6
+        "
+      >
 
         <div
           className="
-            grid
-            grid-cols-1
-            sm:grid-cols-2
-            lg:grid-cols-4
-            gap-6
+            p-8
+            rounded-3xl
+            bg-white
+            dark:bg-zinc-900
+            shadow-xl
           "
         >
-          {stats.map((item, index) => {
+          <Package size={40} />
 
-            const Icon = item.icon;
+          <h2
+            className="
+              text-3xl
+              font-bold
+              mt-4
+            "
+          >
+            Products
+          </h2>
 
-            return (
-              <div
-                key={index}
-                className="
-                  bg-white
-                  dark:bg-zinc-900
-                  border
-                  border-zinc-200
-                  dark:border-zinc-800
-                  rounded-[30px]
-                  p-6
-                  shadow-lg
-                "
-              >
-                <div
-                  className="
-                    flex
-                    items-center
-                    justify-between
-                  "
-                >
-                  <h2
-                    className="
-                      text-lg
-                      text-gray-500
-                    "
-                  >
-                    {item.title}
-                  </h2>
+          <p
+            className="
+              text-gray-500
+              mt-2
+            "
+          >
+            Manage all products
+          </p>
+        </div>
 
-                  <Icon size={28} />
-                </div>
+        <div
+          className="
+            p-8
+            rounded-3xl
+            bg-white
+            dark:bg-zinc-900
+            shadow-xl
+          "
+        >
+          <Users size={40} />
 
-                <h3
-                  className="
-                    text-4xl
-                    font-black
-                    mt-6
-                  "
-                >
-                  {item.value}
-                </h3>
-              </div>
-            );
-          })}
+          <h2
+            className="
+              text-3xl
+              font-bold
+              mt-4
+            "
+          >
+            Users
+          </h2>
+
+          <p
+            className="
+              text-gray-500
+              mt-2
+            "
+          >
+            Manage users
+          </p>
+        </div>
+
+        <div
+          className="
+            p-8
+            rounded-3xl
+            bg-white
+            dark:bg-zinc-900
+            shadow-xl
+          "
+        >
+          <ShoppingCart size={40} />
+
+          <h2
+            className="
+              text-3xl
+              font-bold
+              mt-4
+            "
+          >
+            Orders
+          </h2>
+
+          <p
+            className="
+              text-gray-500
+              mt-2
+            "
+          >
+            Manage orders
+          </p>
         </div>
 
       </div>
+
     </div>
   );
 }

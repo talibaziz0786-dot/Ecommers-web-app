@@ -103,6 +103,19 @@ setRelatedProducts(filtered);
   };
 
   // SUBMIT REVIEW
+
+  const token =
+  localStorage.getItem(
+    "token"
+  );
+
+  if (!token) {
+
+  return toast.error(
+    "Please login first"
+  );
+}
+
   const submitReview =
     async () => {
 
@@ -337,19 +350,32 @@ setRelatedProducts(filtered);
             "
           >
 
-            {Array.from({
-              length: Math.round(
-                product.rating || 0
-              ),
-            }).map((_, i) => (
+           {Array.from({
+  length: 5,
+}).map((_, i) => (
 
-              <Star
-                key={i}
-                size={22}
-                fill="currentColor"
-              />
+  <Star
+    key={i}
+    size={22}
+    fill={
+      i <
+      Math.round(
+        product.rating || 0
+      )
+        ? "currentColor"
+        : "transparent"
+    }
+    className={
+      i <
+      Math.round(
+        product.rating || 0
+      )
+        ? "text-yellow-500"
+        : "text-gray-400"
+    }
+  />
 
-            ))}
+))}
 
             <span
               className="
@@ -407,13 +433,18 @@ setRelatedProducts(filtered);
 
             <div
               className="
-                border
-                border-zinc-300
-                dark:border-zinc-700
-                px-6
-                py-4
-                rounded-full
-              "
+  px-6
+  py-4
+  rounded-full
+  font-bold
+  border
+  border-zinc-300
+  dark:border-zinc-700
+  bg-green-100
+  dark:bg-green-900/30
+  text-green-700
+  dark:text-green-400
+"
             >
               Stock:
               {" "}

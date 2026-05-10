@@ -38,14 +38,12 @@ router.post(
         adminSecret,
       } = req.body;
 
-      // CHECK USER
       const userExists =
         await User.findOne({
           email,
         });
 
       if (userExists) {
-
         return res
           .status(400)
           .json({
@@ -54,27 +52,22 @@ router.post(
           });
       }
 
-      // HASH PASSWORD
       const hashedPassword =
         await bcrypt.hash(
           password,
           10
         );
 
-      // DEFAULT ROLE
       let role = "user";
 
-      // ADMIN CHECK
+      // ADMIN ONLY
       if (
-        adminSecret &&
         adminSecret ===
-          process.env.ADMIN_SECRET_KEY
+        process.env.ADMIN_SECRET
       ) {
-
         role = "admin";
       }
 
-      // CREATE USER
       const user =
         await User.create({
           name,
@@ -86,11 +79,8 @@ router.post(
 
       res.json({
         _id: user._id,
-        name: user.name,
         email: user.email,
         role: user.role,
-        token:
-          generateToken(user),
       });
 
     } catch (error) {
@@ -104,7 +94,6 @@ router.post(
     }
   }
 );
-
 
 // LOGIN
 router.post(
