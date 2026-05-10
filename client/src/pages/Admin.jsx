@@ -12,9 +12,14 @@ import {
   Pencil,
   Boxes,
   AlertTriangle,
+  ImagePlus,
 } from "lucide-react";
 
 export default function Admin() {
+
+  // =========================
+  // STATES
+  // =========================
 
   const [formData, setFormData] =
     useState({
@@ -27,7 +32,7 @@ export default function Admin() {
     });
 
   const [preview, setPreview] =
-    useState("");
+    useState([]);
 
   const [loading, setLoading] =
     useState(false);
@@ -35,7 +40,26 @@ export default function Admin() {
   const [products, setProducts] =
     useState([]);
 
+  const [editId, setEditId] =
+    useState(null);
+
+  // =========================
+  // INPUT HANDLER
+  // =========================
+
+  const changeHandler = (e) => {
+
+    setFormData({
+      ...formData,
+      [e.target.name]:
+        e.target.value,
+    });
+  };
+
+  // =========================
   // FETCH PRODUCTS
+  // =========================
+
   const fetchProducts =
     async () => {
 
@@ -60,36 +84,44 @@ export default function Admin() {
 
   }, []);
 
-  // INPUT HANDLER
-  const changeHandler = (e) => {
-
-    setFormData({
-      ...formData,
-      [e.target.name]:
-        e.target.value,
-    });
-  };
-
+  // =========================
   // IMAGE UPLOAD
+  // =========================
+
   const imageHandler =
     async (e) => {
 
-      const file =
-        e.target.files[0];
+      const files =
+        Array.from(
+          e.target.files
+        );
 
-      if (!file) return;
+      if (
+        files.length === 0
+      )
+        return;
+
+      // PREVIEW
+      const previewImages =
+        files.map((file) =>
+          URL.createObjectURL(
+            file
+          )
+        );
+
+      setPreview(
+        previewImages
+      );
 
       const data =
         new FormData();
 
-      data.append(
-        "images",
-        file
-      );
-
-      setPreview(
-        URL.createObjectURL(file)
-      );
+      files.forEach((file) => {
+        data.append(
+          "images",
+          file
+        );
+      });
 
       try {
 
@@ -97,11 +129,8 @@ export default function Admin() {
 
         const res =
           await axios.post(
-
             `${import.meta.env.VITE_API_URL}/upload`,
-
             data,
-
             {
               headers: {
                 "Content-Type":
@@ -117,7 +146,7 @@ export default function Admin() {
         });
 
         alert(
-          "Image Uploaded ✅"
+          "Images Uploaded ✅"
         );
 
       } catch (error) {
@@ -125,7 +154,9 @@ export default function Admin() {
         console.log(error);
 
         alert(
-          "Upload Failed ❌"
+          error.response?.data
+            ?.message ||
+            "Upload Failed ❌"
         );
 
       } finally {
@@ -134,7 +165,30 @@ export default function Admin() {
       }
     };
 
-  // ADD PRODUCT
+  // =========================
+  // RESET FORM
+  // =========================
+
+  const resetForm = () => {
+
+    setFormData({
+      name: "",
+      price: "",
+      category: "",
+      description: "",
+      countInStock: "",
+      images: [],
+    });
+
+    setPreview([]);
+
+    setEditId(null);
+  };
+
+  // =========================
+  // SUBMIT PRODUCT
+  // =========================
+
   const submitHandler =
     async (e) => {
 
@@ -147,34 +201,65 @@ export default function Admin() {
             "token"
           );
 
-        await axios.post(
+        if (!token) {
 
-          `${import.meta.env.VITE_API_URL}/products`,
+          alert(
+            "Please Login First ❌"
+          );
 
-          formData,
+          return;
+        }
 
-          {
-            headers: {
-              Authorization:
-                `Bearer ${token}`,
-            },
-          }
-        );
+        if (
+          formData.images
+            .length === 0
+        ) {
 
-        alert(
-          "Product Added ✅"
-        );
+          alert(
+            "Upload Product Images ❌"
+          );
 
-        setFormData({
-          name: "",
-          price: "",
-          category: "",
-          description: "",
-          countInStock: "",
-          images: [],
-        });
+          return;
+        }
 
-        setPreview("");
+        // EDIT PRODUCT
+        if (editId) {
+
+          await axios.put(
+            `${import.meta.env.VITE_API_URL}/products/${editId}`,
+            formData,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+          alert(
+            "Product Updated ✅"
+          );
+
+        } else {
+
+          // CREATE PRODUCT
+          await axios.post(
+            `${import.meta.env.VITE_API_URL}/products`,
+            formData,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+          alert(
+            "Product Added ✅"
+          );
+        }
+
+        resetForm();
 
         fetchProducts();
 
@@ -183,12 +268,17 @@ export default function Admin() {
         console.log(error);
 
         alert(
-          "Product Upload Failed ❌"
+          error.response?.data
+            ?.message ||
+            "Product Upload Failed ❌"
         );
       }
     };
 
+  // =========================
   // DELETE PRODUCT
+  // =========================
+
   const deleteHandler =
     async (id) => {
 
@@ -197,7 +287,9 @@ export default function Admin() {
           "Delete Product?"
         );
 
-      if (!confirmDelete)
+      if (
+        !confirmDelete
+      )
         return;
 
       try {
@@ -208,9 +300,7 @@ export default function Admin() {
           );
 
         await axios.delete(
-
           `${import.meta.env.VITE_API_URL}/products/${id}`,
-
           {
             headers: {
               Authorization:
@@ -230,493 +320,685 @@ export default function Admin() {
         console.log(error);
 
         alert(
-          "Delete Failed ❌"
+          error.response?.data
+            ?.message ||
+            "Delete Failed ❌"
         );
       }
     };
+
+  // =========================
+  // EDIT PRODUCT
+  // =========================
+
+  const editHandler = (p) => {
+
+    setEditId(p._id);
+
+    setFormData({
+      name: p.name,
+      price: p.price,
+      category:
+        p.category,
+      description:
+        p.description,
+      countInStock:
+        p.countInStock,
+      images: p.images,
+    });
+
+    setPreview(p.images);
+  };
+
+  // =========================
+  // JSX
+  // =========================
 
   return (
 
     <div
       className="
-        max-w-7xl
-        mx-auto
-        py-10
+        min-h-screen
+        bg-zinc-100
+        dark:bg-black
+        text-black
+        dark:text-white
         px-5
+        py-10
       "
     >
 
-      {/* TOP */}
       <div
         className="
-          flex
-          items-center
-          gap-4
-          mb-10
+          max-w-7xl
+          mx-auto
         "
       >
 
-        <PackagePlus size={40} />
-
-        <h1
-          className="
-            text-5xl
-            font-black
-          "
-        >
-          Product Manager
-        </h1>
-
-      </div>
-
-      {/* ANALYTICS */}
-      <div
-        className="
-          grid
-          md:grid-cols-3
-          gap-6
-          mb-10
-        "
-      >
+        {/* HEADER */}
 
         <div
           className="
-            bg-white
-            dark:bg-zinc-900
-            p-6
-            rounded-3xl
-            shadow-xl
-          "
-        >
-
-          <Boxes size={35} />
-
-          <h2
-            className="
-              text-4xl
-              font-black
-              mt-4
-            "
-          >
-            {products.length}
-          </h2>
-
-          <p className="text-gray-500">
-            Total Products
-          </p>
-
-        </div>
-
-        <div
-          className="
-            bg-white
-            dark:bg-zinc-900
-            p-6
-            rounded-3xl
-            shadow-xl
-          "
-        >
-
-          <AlertTriangle
-            size={35}
-          />
-
-          <h2
-            className="
-              text-4xl
-              font-black
-              mt-4
-            "
-          >
-            {
-              products.filter(
-                (p) =>
-                  p.countInStock <
-                  5
-              ).length
-            }
-          </h2>
-
-          <p className="text-gray-500">
-            Low Stock
-          </p>
-
-        </div>
-
-        <div
-          className="
-            bg-white
-            dark:bg-zinc-900
-            p-6
-            rounded-3xl
-            shadow-xl
+            flex
+            items-center
+            gap-4
+            mb-10
           "
         >
 
           <PackagePlus
-            size={35}
+            size={45}
           />
 
-          <h2
-            className="
-              text-4xl
-              font-black
-              mt-4
-            "
-          >
-            Admin
-          </h2>
+          <div>
 
-          <p className="text-gray-500">
-            Product Manager
-          </p>
+            <h1
+              className="
+                text-5xl
+                font-black
+              "
+            >
+              Admin Dashboard
+            </h1>
 
-        </div>
-
-      </div>
-
-      {/* FORM */}
-      <form
-        onSubmit={submitHandler}
-        className="
-          grid
-          md:grid-cols-2
-          gap-8
-          bg-white
-          dark:bg-zinc-900
-          p-8
-          rounded-3xl
-          shadow-2xl
-        "
-      >
-
-        {/* LEFT */}
-        <div className="space-y-5">
-
-          <input
-            type="text"
-            name="name"
-            placeholder="Product Name"
-            value={formData.name}
-            onChange={changeHandler}
-            className="
-              w-full
-              p-4
-              rounded-2xl
-              border
-            "
-          />
-
-          <input
-            type="number"
-            name="price"
-            placeholder="Price"
-            value={formData.price}
-            onChange={changeHandler}
-            className="
-              w-full
-              p-4
-              rounded-2xl
-              border
-            "
-          />
-
-          <input
-            type="text"
-            name="category"
-            placeholder="Category"
-            value={formData.category}
-            onChange={changeHandler}
-            className="
-              w-full
-              p-4
-              rounded-2xl
-              border
-            "
-          />
-
-          <input
-            type="number"
-            name="countInStock"
-            placeholder="Stock"
-            value={
-              formData.countInStock
-            }
-            onChange={changeHandler}
-            className="
-              w-full
-              p-4
-              rounded-2xl
-              border
-            "
-          />
-
-          <textarea
-            rows="6"
-            name="description"
-            placeholder="Description"
-            value={
-              formData.description
-            }
-            onChange={changeHandler}
-            className="
-              w-full
-              p-4
-              rounded-2xl
-              border
-            "
-          />
-
-        </div>
-
-        {/* RIGHT */}
-        <div>
-
-          <label
-            className="
-              border-2
-              border-dashed
-              rounded-3xl
-              h-80
-              flex
-              flex-col
-              items-center
-              justify-center
-              cursor-pointer
-              overflow-hidden
-            "
-          >
-
-            {preview ? (
-
-              <img
-                src={preview}
-                alt=""
-                className="
-                  w-full
-                  h-full
-                  object-cover
-                "
-              />
-
-            ) : (
-
-              <>
-
-                <Upload
-                  size={50}
-                />
-
-                <p className="mt-4">
-                  Drag & Drop Image
-                </p>
-
-              </>
-
-            )}
-
-            <input
-              type="file"
-              hidden
-              onChange={
-                imageHandler
-              }
-            />
-
-          </label>
-
-          {loading && (
-
-            <p className="mt-3">
-              Uploading...
+            <p
+              className="
+                text-gray-500
+                mt-2
+              "
+            >
+              Manage Products
             </p>
 
-          )}
-
-          <button
-            className="
-              w-full
-              mt-6
-              bg-black
-              text-white
-              py-4
-              rounded-2xl
-              font-bold
-              text-lg
-            "
-          >
-            Add Product
-          </button>
+          </div>
 
         </div>
 
-      </form>
+        {/* STATS */}
 
-      {/* PRODUCT TABLE */}
-      <div
-        className="
-          mt-14
-          bg-white
-          dark:bg-zinc-900
-          rounded-3xl
-          p-6
-          shadow-2xl
-          overflow-x-auto
-        "
-      >
-
-        <h2
+        <div
           className="
-            text-3xl
-            font-black
-            mb-6
+            grid
+            md:grid-cols-3
+            gap-6
+            mb-10
           "
         >
-          All Products
-        </h2>
 
-        <table className="w-full">
+          {/* TOTAL */}
 
-          <thead>
+          <div
+            className="
+              bg-white
+              dark:bg-zinc-900
+              p-6
+              rounded-3xl
+              shadow-xl
+            "
+          >
 
-            <tr
+            <Boxes
+              size={35}
+            />
+
+            <h2
               className="
-                border-b
-                border-zinc-200
-                dark:border-zinc-800
+                text-4xl
+                font-black
+                mt-4
+              "
+            >
+              {
+                products.length
+              }
+            </h2>
+
+            <p
+              className="
+                text-gray-500
+              "
+            >
+              Total Products
+            </p>
+
+          </div>
+
+          {/* LOW STOCK */}
+
+          <div
+            className="
+              bg-white
+              dark:bg-zinc-900
+              p-6
+              rounded-3xl
+              shadow-xl
+            "
+          >
+
+            <AlertTriangle
+              size={35}
+            />
+
+            <h2
+              className="
+                text-4xl
+                font-black
+                mt-4
+              "
+            >
+              {
+                products.filter(
+                  (p) =>
+                    p.countInStock <
+                    5
+                ).length
+              }
+            </h2>
+
+            <p
+              className="
+                text-gray-500
+              "
+            >
+              Low Stock
+            </p>
+
+          </div>
+
+          {/* ADMIN */}
+
+          <div
+            className="
+              bg-white
+              dark:bg-zinc-900
+              p-6
+              rounded-3xl
+              shadow-xl
+            "
+          >
+
+            <PackagePlus
+              size={35}
+            />
+
+            <h2
+              className="
+                text-4xl
+                font-black
+                mt-4
+              "
+            >
+              Admin
+            </h2>
+
+            <p
+              className="
+                text-gray-500
+              "
+            >
+              Product Manager
+            </p>
+
+          </div>
+
+        </div>
+
+        {/* FORM */}
+
+        <form
+          onSubmit={
+            submitHandler
+          }
+          className="
+            grid
+            md:grid-cols-2
+            gap-8
+            bg-white
+            dark:bg-zinc-900
+            p-8
+            rounded-3xl
+            shadow-2xl
+          "
+        >
+
+          {/* LEFT */}
+
+          <div
+            className="
+              space-y-5
+            "
+          >
+
+            <input
+              type="text"
+              name="name"
+              value={
+                formData.name
+              }
+              placeholder="Product Name"
+              onChange={
+                changeHandler
+              }
+              className="
+                w-full
+                p-4
+                rounded-2xl
+                border
+                bg-transparent
+              "
+              required
+            />
+
+            <input
+              type="number"
+              name="price"
+              value={
+                formData.price
+              }
+              placeholder="Price"
+              onChange={
+                changeHandler
+              }
+              className="
+                w-full
+                p-4
+                rounded-2xl
+                border
+                bg-transparent
+              "
+              required
+            />
+
+            <input
+              type="text"
+              name="category"
+              value={
+                formData.category
+              }
+              placeholder="Category"
+              onChange={
+                changeHandler
+              }
+              className="
+                w-full
+                p-4
+                rounded-2xl
+                border
+                bg-transparent
+              "
+              required
+            />
+
+            <input
+              type="number"
+              name="countInStock"
+              value={
+                formData.countInStock
+              }
+              placeholder="Stock"
+              onChange={
+                changeHandler
+              }
+              className="
+                w-full
+                p-4
+                rounded-2xl
+                border
+                bg-transparent
+              "
+              required
+            />
+
+            <textarea
+              rows="6"
+              name="description"
+              value={
+                formData.description
+              }
+              placeholder="Description"
+              onChange={
+                changeHandler
+              }
+              className="
+                w-full
+                p-4
+                rounded-2xl
+                border
+                bg-transparent
+              "
+              required
+            />
+
+          </div>
+
+          {/* RIGHT */}
+
+          <div>
+
+            {/* IMAGE BOX */}
+
+            <label
+              className="
+                border-2
+                border-dashed
+                rounded-3xl
+                min-h-[320px]
+                flex
+                flex-col
+                items-center
+                justify-center
+                cursor-pointer
+                overflow-hidden
+                p-5
               "
             >
 
-              <th className="text-left py-4">
-                Image
-              </th>
+              {preview.length >
+              0 ? (
 
-              <th className="text-left py-4">
-                Name
-              </th>
+                <div
+                  className="
+                    grid
+                    grid-cols-2
+                    gap-4
+                    w-full
+                  "
+                >
 
-              <th className="text-left py-4">
-                Price
-              </th>
+                  {preview.map(
+                    (
+                      img,
+                      index
+                    ) => (
 
-              <th className="text-left py-4">
-                Stock
-              </th>
+                      <img
+                        key={
+                          index
+                        }
+                        src={img}
+                        alt=""
+                        className="
+                          h-36
+                          w-full
+                          object-cover
+                          rounded-2xl
+                        "
+                      />
 
-              <th className="text-left py-4">
-                Actions
-              </th>
+                    )
+                  )}
 
-            </tr>
+                </div>
 
-          </thead>
+              ) : (
 
-          <tbody>
+                <>
 
-            {products.map((p) => (
+                  <ImagePlus
+                    size={55}
+                  />
+
+                  <p
+                    className="
+                      mt-4
+                      text-lg
+                    "
+                  >
+                    Upload Product Images
+                  </p>
+
+                </>
+
+              )}
+
+              <input
+                type="file"
+                multiple
+                hidden
+                onChange={
+                  imageHandler
+                }
+              />
+
+            </label>
+
+            {/* LOADING */}
+
+            {loading && (
+
+              <p
+                className="
+                  mt-4
+                  text-center
+                  font-bold
+                "
+              >
+                Uploading...
+              </p>
+
+            )}
+
+            {/* BUTTON */}
+
+            <button
+              type="submit"
+              className="
+                w-full
+                mt-6
+                bg-black
+                dark:bg-white
+                dark:text-black
+                text-white
+                py-4
+                rounded-2xl
+                font-bold
+                text-lg
+                hover:scale-105
+                transition
+              "
+            >
+
+              {editId
+                ? "Update Product"
+                : "Add Product"}
+
+            </button>
+
+          </div>
+
+        </form>
+
+        {/* PRODUCT TABLE */}
+
+        <div
+          className="
+            mt-14
+            bg-white
+            dark:bg-zinc-900
+            rounded-3xl
+            p-6
+            shadow-2xl
+            overflow-x-auto
+          "
+        >
+
+          <h2
+            className="
+              text-3xl
+              font-black
+              mb-6
+            "
+          >
+            All Products
+          </h2>
+
+          <table
+            className="
+              w-full
+            "
+          >
+
+            <thead>
 
               <tr
-                key={p._id}
                 className="
                   border-b
-                  border-zinc-100
-                  dark:border-zinc-800
+                  border-zinc-300
+                  dark:border-zinc-700
                 "
               >
 
-                <td className="py-4">
+                <th className="py-4 text-left">
+                  Image
+                </th>
 
-                  <img
-                    src={
-                      p.images?.[0] ||
-                      "https://via.placeholder.com/100"
-                    }
-                    alt=""
-                    className="
-                      h-16
-                      w-16
-                      object-cover
-                      rounded-xl
-                    "
-                  />
+                <th className="py-4 text-left">
+                  Name
+                </th>
 
-                </td>
+                <th className="py-4 text-left">
+                  Price
+                </th>
 
-                <td>
-                  {p.name}
-                </td>
+                <th className="py-4 text-left">
+                  Stock
+                </th>
 
-                <td>
-                  ₹{p.price}
-                </td>
-
-                <td>
-
-                  <span
-                    className={`
-                      px-3
-                      py-1
-                      rounded-full
-                      text-sm
-                      ${
-                        p.countInStock <
-                        5
-                          ? "bg-red-500 text-white"
-                          : "bg-green-500 text-white"
-                      }
-                    `}
-                  >
-                    {p.countInStock}
-                  </span>
-
-                </td>
-
-                <td>
-
-                  <div className="flex gap-3">
-
-                    <button
-                      className="
-                        p-3
-                        rounded-xl
-                        bg-zinc-100
-                        dark:bg-zinc-800
-                      "
-                    >
-                      <Pencil
-                        size={18}
-                      />
-                    </button>
-
-                    <button
-                      onClick={() =>
-                        deleteHandler(
-                          p._id
-                        )
-                      }
-                      className="
-                        p-3
-                        rounded-xl
-                        bg-red-500
-                        text-white
-                      "
-                    >
-                      <Trash2
-                        size={18}
-                      />
-                    </button>
-
-                  </div>
-
-                </td>
+                <th className="py-4 text-left">
+                  Actions
+                </th>
 
               </tr>
 
-            ))}
+            </thead>
 
-          </tbody>
+            <tbody>
 
-        </table>
+              {products.map(
+                (p) => (
+
+                  <tr
+                    key={p._id}
+                    className="
+                      border-b
+                      border-zinc-200
+                      dark:border-zinc-800
+                    "
+                  >
+
+                    <td className="py-4">
+
+                      <img
+                        src={
+                          p.images?.[0]
+                        }
+                        alt=""
+                        className="
+                          h-16
+                          w-16
+                          object-cover
+                          rounded-xl
+                        "
+                      />
+
+                    </td>
+
+                    <td>
+                      {p.name}
+                    </td>
+
+                    <td>
+                      ₹{p.price}
+                    </td>
+
+                    <td>
+
+                      <span
+                        className={`
+                          px-3
+                          py-1
+                          rounded-full
+                          text-sm
+                          ${
+                            p.countInStock <
+                            5
+                              ? "bg-red-500 text-white"
+                              : "bg-green-500 text-white"
+                          }
+                        `}
+                      >
+                        {
+                          p.countInStock
+                        }
+                      </span>
+
+                    </td>
+
+                    <td>
+
+                      <div
+                        className="
+                          flex
+                          gap-3
+                        "
+                      >
+
+                        <button
+                          onClick={() =>
+                            editHandler(
+                              p
+                            )
+                          }
+                          type="button"
+                          className="
+                            p-3
+                            rounded-xl
+                            bg-zinc-200
+                            dark:bg-zinc-800
+                          "
+                        >
+
+                          <Pencil
+                            size={18}
+                          />
+
+                        </button>
+
+                        <button
+                          onClick={() =>
+                            deleteHandler(
+                              p._id
+                            )
+                          }
+                          type="button"
+                          className="
+                            p-3
+                            rounded-xl
+                            bg-red-500
+                            text-white
+                          "
+                        >
+
+                          <Trash2
+                            size={18}
+                          />
+
+                        </button>
+
+                      </div>
+
+                    </td>
+
+                  </tr>
+
+                )
+              )}
+
+            </tbody>
+
+          </table>
+
+        </div>
 
       </div>
 

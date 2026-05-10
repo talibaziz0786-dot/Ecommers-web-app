@@ -1,59 +1,154 @@
-import User from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-// ✅ REGISTER
-export const registerUser = async (req, res) => {
-  const { name, email, password } = req.body;
+import User from "../models/User.js";
 
-  const userExists = await User.findOne({ email });
-
-  if (userExists) {
-    return res.status(400).json({ message: "User already exists" });
-  }
-
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(password, salt);
-
-  const user = await User.create({
-    name,
-    email,
-    password: hashedPassword,
-    role: "user",
-  });
-
-  res.json({
-    _id: user._id,
-    email: user.email,
-    token: generateToken(user),
-  });
-};
-
-// ✅ LOGIN
-export const loginUser = async (req, res) => {
-  const { email, password } = req.body;
-
-  const user = await User.findOne({ email });
-
-  if (user && (await bcrypt.compare(password, user.password))) {
-    res.json({
-      _id: user._id,
-      email: user.email,
-      token: generateToken(user),
-    });
-  } else {
-    res.status(401).json({ message: "Invalid credentials" });
-  }
-};
-
-// ✅ TOKEN
+// GENERATE TOKEN
 const generateToken = (user) => {
+
   return jwt.sign(
     {
       id: user._id,
       role: user.role,
+      email: user.email,
     },
     process.env.JWT_SECRET,
-    { expiresIn: "7d" }
+    {
+      expiresIn: "30d",
+    }
   );
 };
+
+// REGISTER
+export const registerUser =
+  async (req, res) => {
+
+    try {
+
+      const {
+        name,
+        email,
+        password,
+        adminSecret,
+      } = req.body;
+
+      const userExists =
+        await User.findOne({
+          email,
+        });
+
+      if (userExists) {
+
+        return res
+          .status(400)
+          .json({
+            message:
+              "User already exists",
+          });
+      }
+
+      const hashedPassword =
+        await bcrypt.hash(
+          password,
+          10
+        );
+
+      let role = "user";
+
+      if (
+        adminSecret ===
+        process.env.ADMIN_SECRET
+      ) {
+        role = "admin";
+      }
+
+      const user =
+        await User.create({
+          name,
+          email,
+          password:
+            hashedPassword,
+          role,
+        });
+
+      res.json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        token:
+          generateToken(user),
+      });
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+        message:
+          "Register Failed",
+      });
+    }
+  };
+
+// LOGIN
+export const loginUser =
+  async (req, res) => {
+
+    try {
+
+      const {
+        email,
+        password,
+      } = req.body;
+
+      const user =
+        await User.findOne({
+          email,
+        });
+
+      if (!user) {
+
+        return res
+          .status(400)
+          .json({
+            message:
+              "Invalid Email",
+          });
+      }
+
+      const isMatch =
+        await bcrypt.compare(
+          password,
+          user.password
+        );
+
+      if (!isMatch) {
+
+        return res
+          .status(400)
+          .json({
+            message:
+              "Invalid Password",
+          });
+      }
+
+      res.json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        token:
+          generateToken(user),
+      });
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+        message:
+          "Login Failed",
+      });
+    }
+  };

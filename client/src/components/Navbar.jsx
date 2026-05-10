@@ -28,18 +28,38 @@ export default function Navbar({
 
   const navigate = useNavigate();
 
-  const token =
-    localStorage.getItem("token");
+ const token =
+  localStorage.getItem(
+    "token"
+  );
 
-    const isLoggedIn = !!token;
+let user = null;
 
-  const user = token
-    ? JSON.parse(
-        atob(
-          token.split(".")[1]
-        )
-      )
-    : null;
+try {
+
+  if (
+    token &&
+    token.includes(".")
+  ) {
+
+    const payload =
+      token.split(".")[1];
+
+    user = JSON.parse(
+      atob(payload)
+    );
+  }
+
+} catch (error) {
+
+  console.log(
+    "Invalid Token"
+  );
+
+  localStorage.removeItem(
+    "token"
+  );
+}
 
   const isAdmin =
     user?.role === "admin";
