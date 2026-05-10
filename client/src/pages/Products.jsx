@@ -4,6 +4,7 @@ import ProductCard from "../components/ProductCard";
 import axios from "axios";
 import Hero from "../components/Hero";
 import { motion } from "framer-motion";
+import ChatBot from "../components/ChatBot";
 
 export default function Products({
   cart,
@@ -317,6 +318,7 @@ const matchSearch =
    </div>
 
    </div>
+   <ChatBot products={products} />
 </>
 
 );

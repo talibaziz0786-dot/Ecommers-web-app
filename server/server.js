@@ -1,26 +1,22 @@
-// server.js
-
 import express from "express";
-import dotenv from "dotenv";
-import cors from "cors";
 import mongoose from "mongoose";
+import cors from "cors";
+import dotenv from "dotenv";
 
 import productRoutes from "./src/routes/productRoutes.js";
-import userRoutes from "./src/routes/userRoutes.js";
 import uploadRoutes from "./src/routes/uploadRoutes.js";
+import authRoutes from "./src/routes/authRoutes.js";
 
 dotenv.config();
 
 const app = express();
+
 
 // MIDDLEWARE
 app.use(cors());
 
 app.use(express.json());
 
-app.use(express.urlencoded({
-  extended: true,
-}));
 
 // ROUTES
 app.use(
@@ -29,19 +25,21 @@ app.use(
 );
 
 app.use(
-  "/api/users",
-  userRoutes
-);
-
-app.use(
   "/api/upload",
   uploadRoutes
 );
 
+app.use(
+  "/api/auth",
+  authRoutes
+);
+
+
 // TEST ROUTE
 app.get("/", (req, res) => {
-  res.send("API Running...");
+  res.send("API Running 🚀");
 });
+
 
 // DATABASE
 mongoose
@@ -49,17 +47,16 @@ mongoose
   .then(() => {
 
     console.log(
-      "MongoDB Connected"
+      "MongoDB Connected ✅"
     );
 
     app.listen(5000, () => {
-
       console.log(
-        "Server running on port 5000"
+        "Server Running 🚀"
       );
     });
+
   })
   .catch((error) => {
-
     console.log(error);
   });
