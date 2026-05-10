@@ -18,6 +18,7 @@ import Dashboard from "./pages/Dashboard";
 import Checkout from "./pages/Checkout";
 import Success from "./pages/Success";
 import Wishlist from "./pages/Wishlist";
+import Register from "./pages/Register";
 
 function App() {
 
@@ -158,6 +159,11 @@ function App() {
           path="/login"
           element={<Login />}
         />
+          
+                    <Route
+            path="/register"
+            element={<Register />}
+          />
 
         <Route
           path="/admin"
