@@ -9,6 +9,10 @@ import {
   LayoutDashboard,
   Shield,
   LogOut,
+  User,
+  Menu,
+  X,
+  PackagePlus,
 } from "lucide-react";
 
 import { useState } from "react";
@@ -20,7 +24,6 @@ export default function Navbar({
   search,
   setSearch,
   wishlist = [],
-  setWishlist,
 }) {
 
   const navigate = useNavigate();
@@ -30,7 +33,9 @@ export default function Navbar({
 
   const user = token
     ? JSON.parse(
-        atob(token.split(".")[1])
+        atob(
+          token.split(".")[1]
+        )
       )
     : null;
 
@@ -40,10 +45,15 @@ export default function Navbar({
   const [openAdmin, setOpenAdmin] =
     useState(false);
 
+  const [mobileMenu, setMobileMenu] =
+    useState(false);
+
   // LOGOUT
   const logoutHandler = () => {
 
-    localStorage.removeItem("token");
+    localStorage.removeItem(
+      "token"
+    );
 
     navigate("/login");
 
@@ -66,6 +76,7 @@ export default function Navbar({
         backdrop-blur-2xl
       "
     >
+
       <nav
         className="
           max-w-7xl
@@ -75,7 +86,6 @@ export default function Navbar({
           flex
           items-center
           justify-between
-          gap-6
         "
       >
 
@@ -91,7 +101,7 @@ export default function Navbar({
         </Link>
 
         {/* SEARCH */}
-        <div className="flex-1 hidden md:flex">
+        <div className="flex-1 hidden md:flex px-8">
 
           <div className="relative w-full max-w-xl">
 
@@ -111,7 +121,9 @@ export default function Navbar({
               placeholder="Search products..."
               value={search}
               onChange={(e) =>
-                setSearch(e.target.value)
+                setSearch(
+                  e.target.value
+                )
               }
               className="
                 w-full
@@ -132,7 +144,13 @@ export default function Navbar({
         </div>
 
         {/* RIGHT */}
-        <div className="flex items-center gap-3">
+        <div
+          className="
+            flex
+            items-center
+            gap-3
+          "
+        >
 
           {/* WISHLIST */}
           <Link
@@ -143,9 +161,9 @@ export default function Navbar({
               rounded-full
               hover:bg-zinc-100
               dark:hover:bg-zinc-800
-              transition
             "
           >
+
             <Heart size={22} />
 
             <span
@@ -166,6 +184,7 @@ export default function Navbar({
             >
               {wishlist.length}
             </span>
+
           </Link>
 
           {/* CART */}
@@ -177,9 +196,9 @@ export default function Navbar({
               rounded-full
               hover:bg-zinc-100
               dark:hover:bg-zinc-800
-              transition
             "
           >
+
             <ShoppingBag size={22} />
 
             <span
@@ -200,6 +219,7 @@ export default function Navbar({
             >
               {cart.length}
             </span>
+
           </Link>
 
           {/* DARK MODE */}
@@ -212,7 +232,6 @@ export default function Navbar({
               rounded-full
               hover:bg-zinc-100
               dark:hover:bg-zinc-800
-              transition
             "
           >
             {dark ? (
@@ -222,8 +241,31 @@ export default function Navbar({
             )}
           </button>
 
-          {/* ADMIN */}
-          {isAdmin && (
+          {/* LOGIN BUTTON */}
+          {!token && (
+            <Link
+              to="/login"
+              className="
+                hidden
+                md:flex
+                items-center
+                gap-2
+                px-5
+                py-3
+                rounded-full
+                bg-black
+                text-white
+                font-semibold
+              "
+            >
+              <User size={18} />
+              Login
+            </Link>
+          )}
+
+          {/* ADMIN / USER MENU */}
+          {token && (
+
             <div className="relative">
 
               <button
@@ -239,7 +281,13 @@ export default function Navbar({
                   dark:hover:bg-zinc-800
                 "
               >
-                <Shield size={22} />
+
+                {openAdmin ? (
+                  <X size={22} />
+                ) : (
+                  <Menu size={22} />
+                )}
+
               </button>
 
               {openAdmin && (
@@ -249,7 +297,7 @@ export default function Navbar({
                     absolute
                     right-0
                     mt-3
-                    w-52
+                    w-64
                     bg-white
                     dark:bg-zinc-900
                     border
@@ -261,38 +309,87 @@ export default function Navbar({
                   "
                 >
 
-                  <Link
-                    to="/dashboard"
+                  {/* USER */}
+                  <div
                     className="
-                      flex
-                      items-center
-                      gap-3
                       px-5
                       py-4
-                      hover:bg-zinc-100
-                      dark:hover:bg-zinc-800
+                      border-b
+                      border-zinc-200
+                      dark:border-zinc-800
                     "
                   >
-                    <LayoutDashboard size={18} />
-                    Dashboard
-                  </Link>
+                    <p className="font-bold">
+                      {user?.email}
+                    </p>
 
-                  <Link
-                    to="/admin"
-                    className="
-                      flex
-                      items-center
-                      gap-3
-                      px-5
-                      py-4
-                      hover:bg-zinc-100
-                      dark:hover:bg-zinc-800
-                    "
-                  >
-                    <Shield size={18} />
-                    Admin Panel
-                  </Link>
+                    <p
+                      className="
+                        text-sm
+                        text-gray-500
+                      "
+                    >
+                      {isAdmin
+                        ? "Admin"
+                        : "User"}
+                    </p>
+                  </div>
 
+                  {/* DASHBOARD */}
+                  {isAdmin && (
+
+                    <>
+                      <Link
+                        to="/dashboard"
+                        className="
+                          flex
+                          items-center
+                          gap-3
+                          px-5
+                          py-4
+                          hover:bg-zinc-100
+                          dark:hover:bg-zinc-800
+                        "
+                      >
+                        <LayoutDashboard size={18} />
+                        Dashboard
+                      </Link>
+
+                      <Link
+                        to="/admin"
+                        className="
+                          flex
+                          items-center
+                          gap-3
+                          px-5
+                          py-4
+                          hover:bg-zinc-100
+                          dark:hover:bg-zinc-800
+                        "
+                      >
+                        <Shield size={18} />
+                        Admin Panel
+                      </Link>
+
+                      <Link
+                        to="/admin"
+                        className="
+                          flex
+                          items-center
+                          gap-3
+                          px-5
+                          py-4
+                          hover:bg-zinc-100
+                          dark:hover:bg-zinc-800
+                        "
+                      >
+                        <PackagePlus size={18} />
+                        Upload Product
+                      </Link>
+                    </>
+                  )}
+
+                  {/* LOGOUT */}
                   <button
                     onClick={logoutHandler}
                     className="
@@ -312,13 +409,15 @@ export default function Navbar({
                   </button>
 
                 </div>
-             )}
+              )}
 
             </div>
           )}
 
         </div>
+
       </nav>
+
     </header>
   );
 }

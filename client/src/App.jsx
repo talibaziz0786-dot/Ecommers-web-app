@@ -106,7 +106,7 @@ function App() {
   wishlist={wishlist}
   setWishlist={setWishlist}
 />
-
+<div className="pt-28">
       <Routes>
 
         <Route
@@ -186,6 +186,7 @@ function App() {
 
       </Routes>
 
+</div>
       <Footer />
 
     </BrowserRouter>
