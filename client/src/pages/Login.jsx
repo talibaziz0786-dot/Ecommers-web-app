@@ -56,14 +56,21 @@ export default function Login() {
         );
 
         // DECODE USER
-        const user =
-          JSON.parse(
-            atob(
-              data.token
-                .split(".")[1]
-            )
-          );
+  let user = null;
 
+try {
+
+  const payload =
+    data.token.split(".")[1];
+
+  user = JSON.parse(
+    atob(payload)
+  );
+
+} catch (error) {
+
+  console.log("Invalid token");
+}
         // ADMIN REDIRECT
         if (
           user.role === "admin"

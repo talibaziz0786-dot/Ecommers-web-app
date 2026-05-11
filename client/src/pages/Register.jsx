@@ -38,10 +38,14 @@ export default function Register() {
             formData
           );
 
-        localStorage.setItem(
-          "token",
-          data.token
-        );
+       if (data.token) {
+
+  localStorage.setItem(
+    "token",
+    data.token
+  );
+
+}
 
         navigate("/");
 

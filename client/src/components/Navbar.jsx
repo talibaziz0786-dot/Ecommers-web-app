@@ -29,9 +29,9 @@ export default function Navbar({
   const navigate = useNavigate();
 
  const token =
-  localStorage.getItem(
-    "token"
-  );
+  localStorage.getItem("token");
+
+const isLoggedIn = !!token;
 
 let user = null;
 
@@ -39,27 +39,34 @@ try {
 
   if (
     token &&
-    token.includes(".")
+    token.split(".").length === 3
   ) {
 
     const payload =
       token.split(".")[1];
 
-    user = JSON.parse(
-      atob(payload)
-    );
+    const decoded =
+      JSON.parse(
+        atob(payload)
+      );
+
+    user = decoded;
   }
 
 } catch (error) {
 
   console.log(
-    "Invalid Token"
+    "Invalid JWT Token"
   );
 
   localStorage.removeItem(
     "token"
   );
+
+  user = null;
 }
+   
+const isLoggedIn = !!token;
 
   const isAdmin =
     user?.role === "admin";

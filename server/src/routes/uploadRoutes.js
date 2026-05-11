@@ -52,7 +52,7 @@ router.post(
 
       console.log("UPLOAD ERROR:");
       console.log(error);
-      console.log(process.env.CLOUD_NAME);
+      
 console.log(process.env.CLOUDINARY_CLOUD_NAME);
 
       res.status(500).json({
