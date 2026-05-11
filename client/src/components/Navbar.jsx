@@ -66,7 +66,7 @@ try {
   user = null;
 }
    
-const isLoggedIn = !!token;
+
 
   const isAdmin =
     user?.role === "admin";
