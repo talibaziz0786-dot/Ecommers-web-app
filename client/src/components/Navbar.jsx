@@ -29,7 +29,7 @@ export default function Navbar({
   const navigate = useNavigate();
 
  const token =
-  localStorage.getItem("token");
+  localStorage.getItem("token");  
 
 const isLoggedIn = !!token;
 
@@ -45,12 +45,15 @@ try {
     const payload =
       token.split(".")[1];
 
-    const decoded =
-      JSON.parse(
-        atob(payload)
-      );
+    const decoded = JSON.parse(
+  decodeURIComponent(
+    escape(
+      atob(payload)
+    )
+  )
+);
 
-    user = decoded;
+user = decoded;
   }
 
 } catch (error) {
@@ -309,27 +312,7 @@ try {
   </div>
 )}
 
-          {/* LOGIN BUTTON */}
-          {!token && (
-            <Link
-              to="/login"
-              className="
-                hidden
-                md:flex
-                items-center
-                gap-2
-                px-5
-                py-3
-                rounded-full
-                bg-black
-                text-white
-                font-semibold
-              "
-            >
-              <User size={18} />
-              Login
-            </Link>
-          )}
+        
 
           {/* ADMIN / USER MENU */}
           {token && (

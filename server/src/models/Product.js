@@ -4,6 +4,11 @@ const reviewSchema =
   mongoose.Schema(
     {
       user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+
+      name: {
         type: String,
       },
 
@@ -30,21 +35,26 @@ const productSchema =
         required: true,
       },
 
-      image: {
-        type: String,
-        required: true,
-      },
+      // MULTIPLE IMAGES
+      images: [
+        {
+          type: String,
+        },
+      ],
 
       brand: {
         type: String,
+        default: "LuxeStore",
       },
 
       category: {
         type: String,
+        required: true,
       },
 
       description: {
         type: String,
+        required: true,
       },
 
       price: {
@@ -68,6 +78,11 @@ const productSchema =
       },
 
       reviews: [reviewSchema],
+
+      user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
     },
     {
       timestamps: true,

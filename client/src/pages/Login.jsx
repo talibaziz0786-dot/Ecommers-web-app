@@ -63,9 +63,13 @@ try {
   const payload =
     data.token.split(".")[1];
 
-  user = JSON.parse(
-    atob(payload)
-  );
+ user = JSON.parse(
+  decodeURIComponent(
+    escape(
+      atob(payload)
+    )
+  )
+);
 
 } catch (error) {
 

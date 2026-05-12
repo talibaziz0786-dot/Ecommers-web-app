@@ -139,11 +139,12 @@ export default function Admin() {
             }
           );
 
-        setFormData({
-          ...formData,
-          images:
-            res.data.images,
-        });
+       setFormData({
+  ...formData,
+  images: res.data.images,
+});
+
+setPreview(res.data.images);
 
         alert(
           "Images Uploaded ✅"
@@ -609,25 +610,53 @@ export default function Admin() {
               required
             />
 
-            <input
-              type="text"
-              name="category"
-              value={
-                formData.category
-              }
-              placeholder="Category"
-              onChange={
-                changeHandler
-              }
-              className="
-                w-full
-                p-4
-                rounded-2xl
-                border
-                bg-transparent
-              "
-              required
-            />
+            <select
+  name="category"
+  value={formData.category}
+  onChange={changeHandler}
+  className="
+    w-full
+    p-4
+    rounded-2xl
+    border
+    bg-transparent
+  "
+  required
+>
+
+  <option value="">
+    Select Category
+  </option>
+
+  <option value="Clothes">
+    Clothes
+  </option>
+
+  <option value="Electronics">
+    Electronics
+  </option>
+
+  <option value="Laptop">
+    Laptop
+  </option>
+
+  <option value="Mobile">
+    Mobile
+  </option>
+
+  <option value="Shoes">
+    Shoes
+  </option>
+
+  <option value="Watch">
+    Watch
+  </option>
+
+   <option value="Accessories">
+    Accessories
+  </option>
+
+</select>
 
             <input
               type="number"
@@ -682,7 +711,7 @@ export default function Admin() {
                 border-2
                 border-dashed
                 rounded-3xl
-                min-h-[320px]
+                min-h-80
                 flex
                 flex-col
                 items-center
