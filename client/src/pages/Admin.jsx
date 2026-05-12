@@ -109,9 +109,10 @@ export default function Admin() {
           )
         );
 
-      setPreview(
-        previewImages
-      );
+      setPreview((prev) => [
+  ...prev,
+  ...previewImages,
+]);
 
       const data =
         new FormData();
@@ -139,10 +140,18 @@ export default function Admin() {
             }
           );
 
-       setFormData({
-  ...formData,
-  images: res.data.images,
-});
+      setFormData((prev) => ({
+  ...prev,
+  images: [
+    ...prev.images,
+    ...res.data.images,
+  ],
+}));
+
+setPreview((prev) => [
+  ...prev,
+  ...res.data.images,
+]);
 
 setPreview(res.data.images);
 
@@ -201,6 +210,8 @@ setPreview(res.data.images);
           localStorage.getItem(
             "token"
           );
+
+          console.log(token);
 
         if (!token) {
 
@@ -299,6 +310,8 @@ setPreview(res.data.images);
           localStorage.getItem(
             "token"
           );
+
+          console.log(token);
 
         await axios.delete(
           `${import.meta.env.VITE_API_URL}/products/${id}`,
@@ -648,12 +661,48 @@ setPreview(res.data.images);
     Shoes
   </option>
 
-  <option value="Watch">
-    Watch
+  <option value="Watches">
+    Watches
   </option>
 
    <option value="Accessories">
     Accessories
+  </option>
+
+   <option value="Beauty">
+    Beauty
+  </option>
+
+   <option value="Perfumes">
+    Perfumes
+  </option>  
+
+   <option value="Bags">
+    Bags
+  </option>
+
+   <option value="Home">
+    Home
+  </option>
+
+   <option value="Kitchen">
+    Kitchen
+  </option>
+
+   <option value="Sports">
+    Sports
+  </option>
+
+   <option value="Books">
+    Books
+  </option>
+
+   <option value="Toys">
+    Toys
+  </option>
+
+   <option value="Grocery">
+    Grocery
   </option>
 
 </select>
@@ -780,14 +829,13 @@ setPreview(res.data.images);
 
               )}
 
-              <input
-                type="file"
-                multiple
-                hidden
-                onChange={
-                  imageHandler
-                }
-              />
+             <input
+  type="file"
+  multiple
+  accept="image/*"
+  hidden
+  onChange={imageHandler}
+/>
 
             </label>
 
