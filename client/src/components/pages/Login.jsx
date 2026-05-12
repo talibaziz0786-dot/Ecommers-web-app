@@ -2,6 +2,7 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import BASE_URL from "../api/baseURL";
 
 export default function Login() {
 
@@ -22,7 +23,7 @@ export default function Login() {
 
         const { data } =
           await axios.post(
-            "http://localhost:5000/api/auth/login",
+            `${BASE_URL}/auth/login`,
             {
               email,
               password,

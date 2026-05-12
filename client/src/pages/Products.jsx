@@ -5,6 +5,8 @@ import axios from "axios";
 import Hero from "../components/Hero";
 import { motion } from "framer-motion";
 import ChatBot from "../components/ChatBot";
+import BASE_URL from "../api/baseURL";
+
 
 export default function Products({
   cart,
@@ -35,7 +37,7 @@ export default function Products({
     try {
       const token = localStorage.getItem("token");
 
-      await axios.delete(`http://localhost:5000/api/products/${id}`, {
+      await axios.delete(`${BASE_URL}/products/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -59,31 +61,42 @@ export default function Products({
   // UPDATE HANDLER
   const updateHandler = async () => {
   try {
-    const token = localStorage.getItem("token");
 
-    await axios.put(
-      `http://localhost:5000/api/products/${editProduct._id}`,
-      editProduct,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    const token =
+      localStorage.getItem("token");
+
+    const { data } =
+      await axios.put(
+        `${BASE_URL}/products/${editProduct._id}`,
+        editProduct,
+        {
+          headers: {
+            Authorization:
+              `Bearer ${token}`,
+          },
+        }
+      );
 
     alert("Product Updated ✅");
 
-    // UI refresh
     setProducts(
       products.map((p) =>
-        p._id === editProduct._id ? editProduct : p
+        p._id === editProduct._id
+          ? data
+          : p
       )
     );
 
     setEditProduct(null);
+
   } catch (error) {
+
     console.error(error);
-    alert("Update Failed ❌");
+
+    alert(
+      error.response?.data?.message ||
+      "Update Failed ❌"
+    );
   }
 };
 
@@ -245,12 +258,16 @@ const matchSearch =
       <h2 className="text-xl font-bold mb-4">Edit Product</h2>
 
       <input
-        value={editProduct.name}
-        onChange={(e) =>
-          setEditProduct({ ...editProduct, name: e.target.value })
-        }
-        className="border p-2 w-full mb-2"
-      />
+  value={editProduct.images?.[0] || ""}
+  onChange={(e) =>
+    setEditProduct({
+      ...editProduct,
+      images: [e.target.value],
+    })
+  }
+  placeholder="Image URL"
+  className="border p-2 w-full mb-2"
+/>
 
       <input
         value={editProduct.price}
@@ -260,13 +277,7 @@ const matchSearch =
         className="border p-2 w-full mb-2"
       />
 
-      <input
-        value={editProduct.image}
-        onChange={(e) =>
-          setEditProduct({ ...editProduct, image: e.target.value })
-        }
-        className="border p-2 w-full mb-2"
-      />
+     
        
        <input
   value={editProduct.description}
@@ -283,9 +294,28 @@ const matchSearch =
   }
   className="border p-2 w-full mb-2"
 >
-  <option>Clothes</option>
-  <option>Shoes</option>
-  <option>Jewellery</option>
+ {[
+  "Clothes",
+  "Shoes",
+  "Jewellery",
+  "Electronics",
+  "Mobiles",
+  "Laptops",
+  "Watches",
+  "Beauty",
+  "Perfumes",
+  "Bags",
+  "Home",
+  "Kitchen",
+  "Sports",
+  "Books",
+  "Toys",
+  "Grocery",
+].map((cat) => (
+  <option key={cat}>
+    {cat}
+  </option>
+))}
 </select>
 
 <input

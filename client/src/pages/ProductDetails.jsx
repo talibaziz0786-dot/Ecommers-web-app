@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import ProductCard from "../components/ProductCard";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
+import BASE_URL from "../api/baseURL";
 
 export default function ProductDetails({
   cart,
@@ -42,7 +43,7 @@ export default function ProductDetails({
 
         const { data } =
           await axios.get(
-            `http://localhost:5000/api/products/${id}`
+            `${BASE_URL}/products/${id}`
           );
 
         setProduct(data);
@@ -52,7 +53,7 @@ export default function ProductDetails({
         );
       const related =
   await axios.get(
-    "http://localhost:5000/api/products"
+    `${BASE_URL}/products/${id}`
   );
 
 const filtered =
@@ -104,20 +105,18 @@ setRelatedProducts(filtered);
 
   // SUBMIT REVIEW
 
-  const token =
-  localStorage.getItem(
-    "token"
-  );
+  
+  const submitReview =
+    async () => {
 
-  if (!token) {
+      const token =
+  localStorage.getItem("token");
 
+if (!token) {
   return toast.error(
     "Please login first"
   );
 }
-
-  const submitReview =
-    async () => {
 
       try {
 
@@ -127,7 +126,7 @@ setRelatedProducts(filtered);
           );
 
         await axios.post(
-          `http://localhost:5000/api/products/${id}/reviews`,
+          `${BASE_URL}/products/${id}/reviews`,
           {
             rating,
             comment,

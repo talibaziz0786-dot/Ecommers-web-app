@@ -2,6 +2,7 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import BASE_URL from "../api/baseURL";
 
 export default function Checkout({ cart, setCart }) {
   const navigate = useNavigate();
@@ -43,9 +44,15 @@ export default function Checkout({ cart, setCart }) {
       const token = localStorage.getItem("token");
 
       await axios.post(
-        "http://localhost:5000/api/orders",
+        `${BASE_URL}/orders`,
         {
-          orderItems: cart,
+         orderItems: cart.map((item) => ({
+  name: item.name,
+  qty: item.qty,
+  price: item.price,
+  image:
+    item.images?.[0] || "",
+})),
           shippingAddress: {
             address: form.address,
             city: form.city,

@@ -49,11 +49,12 @@ export default function Wishlist({
             {wishlist.map(
               (product) => (
                 <ProductCard
-                  key={product._id}
-                  product={product}
-                  cart={cart}
-                  setCart={setCart}
-                />
+  key={product._id}
+  product={product}
+  cart={cart}
+  setCart={setCart}
+  wishlist={wishlist}
+/>
               )
             )}
           </div>
